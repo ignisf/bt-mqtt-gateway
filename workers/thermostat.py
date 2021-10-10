@@ -39,7 +39,7 @@ class ThermostatWorker(BaseWorker):
         _LOGGER.info("Adding %d %s devices", len(self.devices), repr(self))
         for name, obj in self.devices.items():
             if isinstance(obj, str):
-                self.devices[name] = {"mac": obj, "thermostat": Thermostat(obj)}
+                self.devices[name] = {"mac": obj, "thermostat": Thermostat(obj), "discovery_name_prefix": name}
             elif isinstance(obj, dict):
                 self.devices[name] = {
                     "mac": obj["mac"],
@@ -49,6 +49,10 @@ class ThermostatWorker(BaseWorker):
                     ),
                     "discovery_temperature_template": obj.get(
                         "discovery_temperature_template"
+                    ),
+                    "discovery_name_prefix": obj.get(
+                        "discovery_name_prefix",
+                        name
                     ),
                 }
             else:
@@ -68,17 +72,18 @@ class ThermostatWorker(BaseWorker):
 
     def config_device(self, name, data, availability_topic):
         ret = []
+        print(data)
         mac = data["mac"]
         device = {
             "identifiers": [mac, self.format_discovery_id(mac, name)],
             "manufacturer": "eQ-3",
             "model": "Smart Radiator Thermostat",
-            "name": self.format_discovery_name(name),
+            "name": data.get("discovery_name_prefix") + " Thermostat",
         }
 
         payload = {
             "unique_id": self.format_discovery_id(mac, name, SENSOR_CLIMATE),
-            "name": self.format_discovery_name(name, SENSOR_CLIMATE),
+            "name": data.get("discovery_name_prefix") + " Thermostat",
             "qos": 1,
             "availability_topic": availability_topic,
             "temperature_state_topic": self.format_prefixed_topic(
@@ -93,9 +98,6 @@ class ThermostatWorker(BaseWorker):
             "away_mode_command_topic": self.format_prefixed_topic(name, "away", "set"),
             "hold_state_topic": self.format_prefixed_topic(name, "hold"),
             "hold_command_topic": self.format_prefixed_topic(name, "hold", "set"),
-            "json_attributes_topic": self.format_prefixed_topic(
-                name, "json_attributes"
-            ),
             "min_temp": 5.0,
             "max_temp": 29.5,
             "temp_step": 0.5,
@@ -119,7 +121,7 @@ class ThermostatWorker(BaseWorker):
 
         payload = {
             "unique_id": self.format_discovery_id(mac, name, SENSOR_WINDOW),
-            "name": self.format_discovery_name(name, SENSOR_WINDOW),
+            "name": data.get("discovery_name_prefix") + " Window",
             "state_topic": self.format_prefixed_topic(name, SENSOR_WINDOW),
             "availability_topic": availability_topic,
             "device_class": "window",
@@ -137,7 +139,7 @@ class ThermostatWorker(BaseWorker):
 
         payload = {
             "unique_id": self.format_discovery_id(mac, name, SENSOR_BATTERY),
-            "name": self.format_discovery_name(name, SENSOR_BATTERY),
+            "name": data.get("discovery_name_prefix") + " Thermostat Battery",
             "state_topic": self.format_prefixed_topic(name, SENSOR_BATTERY),
             "availability_topic": availability_topic,
             "device_class": "battery",
@@ -156,6 +158,7 @@ class ThermostatWorker(BaseWorker):
         payload = {
             "unique_id": self.format_discovery_id(mac, name, SENSOR_LOCKED),
             "name": self.format_discovery_name(name, SENSOR_LOCKED),
+            "name": data.get("discovery_name_prefix") + " Thermostat Locked",
             "state_topic": self.format_prefixed_topic(name, SENSOR_LOCKED),
             "availability_topic": availability_topic,
             "device_class": "lock",
@@ -174,6 +177,7 @@ class ThermostatWorker(BaseWorker):
         payload = {
             "unique_id": self.format_discovery_id(mac, name, SENSOR_VALVE),
             "name": self.format_discovery_name(name, SENSOR_VALVE),
+            "name": data.get("discovery_name_prefix") + " Thermostat Valve State",
             "state_topic": self.format_prefixed_topic(name, SENSOR_VALVE),
             "availability_topic": availability_topic,
             "unit_of_measurement": "%",

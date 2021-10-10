@@ -5,8 +5,9 @@ After=network.target
 
 [Service]
 Type=simple
-WorkingDirectory=/home/user/bt-mqtt-gateway
-ExecStart=/home/user/bt-mqtt-gateway/service.sh
+WorkingDirectory=/opt/bt-mqtt-gateway
+ExecStart=/opt/bt-mqtt-gateway/venv/bin/python /opt/bt-mqtt-gateway/gateway.py
+DynamicUser=yes
 Restart=always
 
 [Install]
